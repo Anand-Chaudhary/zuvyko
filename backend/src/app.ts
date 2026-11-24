@@ -3,8 +3,8 @@ import express from 'express'
 import cookie from 'cookie-parser'
 import cors from 'cors'
 import morgan from 'morgan'
+import appRouter from './routes/index'
 import { ApiResponse } from './utils/response';
-import prisma from './lib/prisma';
 
 const app = express();
 
@@ -43,26 +43,7 @@ app.use((_, res, next) => {
   next()
 })
 
-app.get('/api/health', async (_req, res) => {
-  let dbStatus = 'disconnected';
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    dbStatus = 'connected';
-  } catch {
-    dbStatus = 'unreachable';
-  }
-
-  return res.success({
-    success: true,
-    message: 'Server health check',
-    status: 200,
-    data: {
-      uptime: process.uptime(),
-      database: dbStatus,
-      timestamp: new Date().toISOString()
-    }
-  });
-});
+app.use('/api/v1', appRouter)
 
 app.use((err: any, _req: any, res: any, _next: any) => {
   const status = err?.status ?? 500
